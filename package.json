@@ -1,0 +1,12 @@
+{
+  "name": "time-capsule-3d",
+  "version": "1.0.0",
+  "description": "3D Digital Time Capsule & Scrapbook Studio",
+  "scripts": {
+    "dev": "npx --yes serve -p 3000 .",
+    "start": "npx --yes serve -p 3000 ."
+  },
+  "keywords": ["threejs", "3d-book", "time-capsule"],
+  "author": "",
+  "license": "ISC"
+}

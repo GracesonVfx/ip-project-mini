@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Time Capsule — 3D Memory Book & Scrapbook Studio</title>
+  <meta name="description" content="A nostalgic 3D digital time capsule for students to upload, style with custom borders, and cherish their group photos, candids, and event memories forever." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- VIEWPORT CONTAINER -->
+  <div id="viewport-container">
+
+    <!-- 3D WEBGL CANVAS -->
+    <canvas id="book-canvas"></canvas>
+
+    <!-- TOP VIEW PANEL & SCRUBBER -->
+    <header class="top-view-panel" id="top-panel">
+      <div class="top-bar-header">
+        <!-- Logo / Brand -->
+        <div class="brand-capsule">
+          <span class="brand-icon">⏳</span>
+          <div>
+            <div class="brand-title">Time Capsule</div>
+            <div style="font-size: 0.72rem; color: var(--gold-light); font-family: 'Dancing Script', cursive;">Where college moments live forever</div>
+          </div>
+          <span class="brand-badge">Class of 2026</span>
+        </div>
+
+        <!-- Camera Mode Switcher (3D Orbit ⇄ Top Desk View) -->
+        <div class="view-mode-switch" role="tablist">
+          <button class="mode-btn active" id="btn-view-3d" title="Floating 3D Orbit Book View (Shortcut: T)">
+            <span>📖</span> 3D Book
+          </button>
+          <button class="mode-btn" id="btn-view-top" title="Top-Down Desk Spread View (Shortcut: T)">
+            <span>🔭</span> Top View Panel
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="top-bar-actions">
+          <button class="action-pill primary" id="btn-open-studio" title="Open Scrapbook Canvas Studio (Shortcut: E)">
+            <span>✂️</span> Scrapbook Studio
+          </button>
+          <button class="action-pill" id="btn-quick-upload" title="Quick Upload a Photo">
+            <span>📷</span> + Add Memory
+          </button>
+          <button class="action-pill" id="btn-sound-toggle" title="Toggle Page Turn Audio">
+            🔊 Sound: ON
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrubber Track of Album Spreads -->
+      <div class="scrubber-wrapper">
+        <nav class="scrubber-track" id="top-scrubber-track" aria-label="Book page navigation">
+          <!-- Dynamically populated with pages & covers -->
+        </nav>
+      </div>
+    </header>
+
+    <!-- BOTTOM HERO BAR & PAGE INFO -->
+    <footer class="bottom-info-bar">
+      <div class="page-title-box">
+        <h1 id="header-page-title">Digital Time Capsule</h1>
+        <p id="header-page-subtitle">Click page corners or use the arrows to turn pages</p>
+      </div>
+
+      <div class="nav-arrows-box">
+        <button class="nav-arrow-btn" id="btn-page-prev" title="Previous Page (Left Arrow)">‹</button>
+        <button class="nav-arrow-btn" id="btn-page-next" title="Next Page (Right Arrow)">›</button>
+      </div>
+    </footer>
+
+  </div><!-- /#viewport-container -->
+
+
+  <!-- SCRAPBOOK STUDIO MODAL (Creative Photo Canvas Editor) -->
+  <div class="studio-modal hidden" id="studio-modal" role="dialog" aria-modal="true">
+    <div class="studio-dialog">
+      <!-- Studio Header -->
+      <div class="studio-header">
+        <div>
+          <h2 id="studio-spread-title">Scrapbook Studio — Page Editor</h2>
+          <p>Drag, resize, rotate, stack & style borders. Then click "Seal & Update 3D Book"!</p>
+        </div>
+        <button class="studio-close" id="studio-close-btn" title="Close Studio">✕</button>
+      </div>
+
+      <!-- Studio Body -->
+      <div class="studio-body">
+        <!-- Canvas Column -->
+        <div class="studio-canvas-col">
+          <div class="side-toggle-group">
+            <button class="side-toggle-btn active" id="side-left-btn">👈 Left Page</button>
+            <button class="side-toggle-btn" id="side-right-btn">Right Page 👉</button>
+          </div>
+
+          <div class="canvas-frame">
+            <canvas id="studio-canvas"></canvas>
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-dim); text-align:center;">
+            💡 Click on photos to move • Top pin rotates • Bottom-right pin resizes
+          </div>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="studio-controls-col">
+          <!-- Add Elements -->
+          <div class="control-section">
+            <div class="control-title"><span>➕</span> Add Content to Page</div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <button class="action-pill primary" id="btn-add-photo"><span>📷</span> Upload Photo</button>
+              <button class="action-pill" id="btn-add-note"><span>📝</span> + Sticky Note</button>
+              <input type="file" id="studio-file-input" accept="image/*" class="hidden" />
+            </div>
+          </div>
+
+          <!-- Photo Specific Controls -->
+          <div id="studio-photo-controls" class="control-section">
+            <div class="control-title"><span>🖼️</span> Border Style</div>
+            <div class="border-grid">
+              <button class="border-style-btn active" data-border="polaroid">
+                🏷️ Polaroid
+              </button>
+              <button class="border-style-btn" data-border="zigzag">
+                ✂️ Zigzag / Stamp
+              </button>
+              <button class="border-style-btn" data-border="line-gold">
+                ✨ Gold Line
+              </button>
+              <button class="border-style-btn" data-border="washi">
+                🩹 Washi Tape
+              </button>
+              <button class="border-style-btn" data-border="film">
+                🎞️ 35mm Film
+              </button>
+              <button class="border-style-btn" data-border="plain">
+                🧼 Clean Print
+              </button>
+            </div>
+
+            <!-- Photo Filters -->
+            <div style="margin-top: 0.6rem;">
+              <label class="control-title" style="margin-bottom: 0.4rem;"><span>🎨</span> Filter Tone</label>
+              <select class="studio-input" id="photo-filter-select">
+                <option value="nostalgia">🍂 Nostalgia (Warm Sepia)</option>
+                <option value="warm">✨ Golden Hour Glow</option>
+                <option value="film90">📼 90s Film Fade</option>
+                <option value="bw">🎞️ Classic Noir B&amp;W</option>
+                <option value="vivid">🎉 Vivid Memories</option>
+                <option value="none">Original Colors</option>
+              </select>
+            </div>
+
+            <!-- Caption -->
+            <div style="margin-top: 0.6rem;">
+              <label class="control-title" style="margin-bottom: 0.4rem;"><span>✍️</span> Polaroid Caption</label>
+              <input type="text" class="studio-input" id="photo-caption-input" placeholder="e.g. Best Canteen Laughs ☕" maxlength="40" />
+            </div>
+          </div>
+
+          <!-- Note Specific Controls -->
+          <div id="studio-note-controls" class="control-section hidden">
+            <div class="control-title"><span>📝</span> Handwritten Memo Text</div>
+            <textarea class="studio-input" id="note-text-input" rows="3" placeholder="Write your memory story here..."></textarea>
+          </div>
+
+          <!-- Quick Stickers -->
+          <div class="control-section">
+            <div class="control-title"><span>✨</span> Nostalgic Stickers &amp; Washi Tape</div>
+            <div class="sticker-scroll">
+              <button class="quick-sticker-btn" data-text="✨ Unforgettable" data-style="tape-gold">✨ Unforgettable</button>
+              <button class="quick-sticker-btn" data-text="🎓 Class of '24" data-style="tape-gold">🎓 Class of '24</button>
+              <button class="quick-sticker-btn" data-text="❤️ BFFs Forever" data-style="badge-rust">❤️ BFFs Forever</button>
+              <button class="quick-sticker-btn" data-text="🌸 Farewell Tears" data-style="badge-rust">🌸 Farewell Tears</button>
+              <button class="quick-sticker-btn" data-text="☕ Chai Gang" data-style="tape-gold">☕ Chai Gang</button>
+              <button class="quick-sticker-btn" data-text="🏆 Hackathon 1st" data-style="tape-gold">🏆 Hackathon 1st</button>
+            </div>
+          </div>
+
+          <!-- Stacking & Layering -->
+          <div class="control-section">
+            <div class="control-title"><span>🥞</span> Layering &amp; Stack Order</div>
+            <div style="display: flex; gap: 0.6rem;">
+              <button class="action-pill" id="btn-bring-front">⬆️ Bring Forward</button>
+              <button class="action-pill" id="btn-send-back">⬇️ Send Backward</button>
+              <button class="action-pill" id="btn-delete-item" style="color: #f87171; border-color: rgba(248,113,113,0.3);">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Footer -->
+      <div class="studio-footer">
+        <span style="font-size:0.8rem; color:var(--text-dim);">💾 Auto-saved to Capsule storage</span>
+        <div class="studio-actions-right">
+          <button class="action-pill" onclick="ScrapbookEditor.close()">Cancel</button>
+          <button class="action-pill primary" id="btn-seal-page">✨ Seal &amp; Update 3D Book</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- QUICK UPLOAD MODAL -->
+  <div class="quick-upload-modal hidden" id="upload-modal" role="dialog">
+    <div class="upload-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>📷 Add a Memory to Capsule</h3>
+        <button class="studio-close" id="upload-close-btn">✕</button>
+      </div>
+
+      <div class="quick-dropzone-box" id="quick-dropzone">
+        <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">📸</div>
+        <p style="font-weight: 700; color: var(--gold-light);">Click or Drag &amp; Drop Photo Here</p>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.2rem;">Supports JPG, PNG, WEBP</p>
+        <input type="file" id="quick-file-input" accept="image/*" class="hidden" />
+      </div>
+
+      <div>
+        <label class="control-title" style="margin-bottom: 0.4rem;">Memory Title / Caption</label>
+        <input type="text" class="studio-input" id="memory-title-input" placeholder="e.g. Annual Day Celebrations 2023" />
+      </div>
+
+      <div>
+        <label class="control-title" style="margin-bottom: 0.4rem;">Select Border Style</label>
+        <div class="border-radio-group">
+          <label class="border-radio-label">
+            <input type="radio" name="border-choice" value="polaroid" checked />
+            <span>🏷️ Polaroid</span>
+          </label>
+          <label class="border-radio-label">
+            <input type="radio" name="border-choice" value="zigzag" />
+            <span>✂️ Zigzag / Stamp</span>
+          </label>
+          <label class="border-radio-label">
+            <input type="radio" name="border-choice" value="line-gold" />
+            <span>✨ Gold Line</span>
+          </label>
+          <label class="border-radio-label">
+            <input type="radio" name="border-choice" value="washi" />
+            <span>🩹 Washi Tape</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+        <div>
+          <label class="control-title" style="margin-bottom: 0.4rem;">Place in Spread</label>
+          <select class="studio-input" id="target-spread-select">
+            <option value="0">Spread 1 (Orientation Day)</option>
+            <option value="1">Spread 2 (Canteen Tales)</option>
+            <option value="2">Spread 3 (Tech Fest)</option>
+            <option value="3">Spread 4 (Farewell Memories)</option>
+          </select>
+        </div>
+        <div>
+          <label class="control-title" style="margin-bottom: 0.4rem;">Page Side</label>
+          <select class="studio-input" id="target-side-select">
+            <option value="right">Right Page 👉</option>
+            <option value="left">👈 Left Page</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:0.6rem;">
+        <button class="action-pill primary" id="btn-submit-memory" style="width:100%; justify-content:center; padding:0.75rem;">
+          🏺 Seal into Time Capsule
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATION BADGE -->
+  <div id="toast" class="toast-badge hidden" role="status" aria-live="polite"></div>
+
+
+  <!-- THREE.JS & CONTROLS (Local Offline Bundle with CDN Fallback) -->
+  <script src="libs/three.min.js"></script>
+  <script src="libs/OrbitControls.js"></script>
+
+  <!-- APPLICATION MODULES -->
+  <script src="js/storage.js"></script>
+  <script src="js/book3d.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
